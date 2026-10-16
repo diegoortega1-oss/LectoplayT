@@ -25,6 +25,7 @@ class ActividadIntento extends Model
     {
         return [
             'puntaje' => 'decimal:2',
+            'puntos_obtenidos' => 'integer',
             'fecha_inicio' => 'datetime',
             'fecha_fin' => 'datetime',
         ];

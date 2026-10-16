@@ -7,7 +7,60 @@
     <main class="reading-main">
         <a class="reading-back" href="{{ route('student.activities.history') }}">← Ver historial</a>
         <div class="reading-hero"><span aria-hidden="true">🌟</span><div><p>INTENTO FINALIZADO</p><h1>{{ $actividad?->titulo ?? 'Actividad de lectura' }}</h1></div></div>
-        <section class="reading-score" aria-label="Puntaje obtenido"><span>Tu puntaje</span><strong>{{ number_format((float) $intento->puntaje, 2, ',', ' ') }}%</strong><p>Respondiste este intento el {{ $intento->fecha_fin?->format('d/m/Y') }}.</p></section>
+        <section class="reading-result" aria-label="Resultado del intento">
+            <div class="reading-result-heading">
+                <div>
+                    <span class="reading-result-eyebrow">✦ TU RESULTADO</span>
+                    <h2>¡Así te fue en esta lectura!</h2>
+                </div>
+                @if ($intento->fecha_fin)
+                    <p class="reading-result-date"><span aria-hidden="true">📅</span> Respondiste este intento el {{ $intento->fecha_fin->format('d/m/Y') }}.</p>
+                @endif
+            </div>
+            <div class="reading-result-grid">
+                <article class="reading-result-tile reading-result-percent">
+                    <span class="reading-result-icon" aria-hidden="true">🌟</span>
+                    <span class="reading-result-label">Porcentaje de este intento</span>
+                    <strong>{{ number_format((float) $intento->puntaje, 2, ',', ' ') }}%</strong>
+                </article>
+                <article class="reading-result-tile reading-result-correct">
+                    <span class="reading-result-icon" aria-hidden="true">✓</span>
+                    <span class="reading-result-label">Respuestas correctas</span>
+                    <strong>{{ $correctas }}</strong>
+                </article>
+                <article class="reading-result-tile reading-result-incorrect">
+                    <span class="reading-result-icon" aria-hidden="true">✎</span>
+                    <span class="reading-result-label">Respuestas incorrectas</span>
+                    <strong>{{ $incorrectas }}</strong>
+                    <small>Incluye las preguntas sin responder</small>
+                </article>
+                <article class="reading-result-tile reading-result-earned">
+                    <span class="reading-result-icon" aria-hidden="true">✦</span>
+                    <span class="reading-result-label">Puntos obtenidos en este intento</span>
+                    @if ($intento->puntos_obtenidos === null)
+                        <p>Dato no disponible para este intento.</p>
+                    @elseif ($intento->puntos_obtenidos === 0)
+                        <strong>0</strong><small>0 puntos obtenidos. Este intento no sumó puntos.</small>
+                    @else
+                        <strong>{{ number_format($intento->puntos_obtenidos, 0, ',', ' ') }}</strong>
+                        <small>{{ number_format($intento->puntos_obtenidos, 0, ',', ' ') }} puntos obtenidos.</small>
+                    @endif
+                </article>
+                <article class="reading-result-tile reading-result-total">
+                    <span class="reading-result-icon" aria-hidden="true">🏆</span>
+                    <span class="reading-result-label">Mis puntos acumulados</span>
+                    @if ($gamificacion)
+                        <strong>{{ number_format($gamificacion->puntos, 0, ',', ' ') }}</strong>
+                        <small>{{ number_format($gamificacion->puntos, 0, ',', ' ') }} puntos en total.</small>
+                    @else
+                        <p>Aún no hay puntos registrados.</p>
+                    @endif
+                </article>
+            </div>
+            @if (config('gamification.attempt_cutoff_id') === null)
+                <p class="reading-result-note">Las recompensas por actividades aún no están activas.</p>
+            @endif
+        </section>
         <h2 class="reading-review-title">Revisa tus respuestas</h2>
         @forelse ($preguntas as $pregunta)
             @php

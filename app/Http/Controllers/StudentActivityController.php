@@ -83,6 +83,9 @@ class StudentActivityController extends Controller
         $selecciones = $this->validatedSelections($request);
 
         DB::transaction(function () use ($intento, $estudiante, $selecciones): void {
+            // Todas las entregas de un estudiante toman este bloqueo antes del del intento.
+            // Así, dos intentos distintos no pueden decidir la recompensa simultáneamente.
+            Estudiante::whereKey($estudiante->getKey())->lockForUpdate()->firstOrFail();
             $actual = $this->lockedAttempt($intento, $estudiante);
             abort_if($actual->estado !== 'EN_PROCESO', 409, 'Este intento ya fue entregado.');
 
@@ -112,6 +115,36 @@ class StudentActivityController extends Controller
             $actual->puntaje = round($correctas * 100 / $preguntas->count(), 2);
             $actual->fecha_fin = now();
             $actual->estado = 'FINALIZADO';
+
+            $cutoff = config('gamification.attempt_cutoff_id');
+            // Los históricos no se reconstruyen. En las nuevas entregas registramos
+            // cero salvo que se confirme un incremento dentro de esta transacción.
+            $actual->puntos_obtenidos = is_int($cutoff) && $cutoff >= 0 && $actual->getKey() <= $cutoff
+                ? null
+                : 0;
+            if (is_int($cutoff) && $cutoff >= 0 && $actual->getKey() > $cutoff) {
+                // Lectura bloqueante: debe observar finalizaciones confirmadas tras esperar
+                // el bloqueo del estudiante, incluso con el aislamiento MySQL REPEATABLE READ.
+                $alreadyRewarded = $estudiante->intentos()
+                    ->where('actividad_id', $actual->actividad_id)
+                    ->where('id_intento', '>', $cutoff)
+                    ->where('id_intento', '!=', $actual->getKey())
+                    ->where('estado', 'FINALIZADO')
+                    ->lockForUpdate()
+                    ->first(['id_intento']) !== null;
+
+                if (! $alreadyRewarded) {
+                    $gamificacion = $estudiante->gamificacion()->firstOrCreate([], ['puntos' => 0]);
+                    if ($correctas > 0) {
+                        $puntosOtorgados = $correctas * 5;
+                        if ($gamificacion->increment('puntos', $puntosOtorgados) !== 1) {
+                            throw new \RuntimeException('No se pudo registrar la recompensa del intento.');
+                        }
+                        $actual->puntos_obtenidos = $puntosOtorgados;
+                    }
+                }
+            }
+
             $actual->save();
         });
 
@@ -130,8 +163,15 @@ class StudentActivityController extends Controller
             && $actividad->nivel_id === $estudiante->nivel_actual_id;
         $preguntas = Pregunta::where('actividad_id', $intento->actividad_id)->orderBy('id_pregunta')->get();
         $respuestas = $intento->respuestas()->get()->keyBy('pregunta_id');
+        $correctas = $preguntas->filter(function (Pregunta $pregunta) use ($respuestas): bool {
+            $respuesta = $respuestas->get($pregunta->id_pregunta);
 
-        return view('student.activities.result', compact('actividad', 'intento', 'preguntas', 'respuestas', 'puedeReintentar'));
+            return $respuesta !== null && $respuesta->alternativa === $pregunta->respuesta_correcta;
+        })->count();
+        $incorrectas = $preguntas->count() - $correctas;
+        $gamificacion = $estudiante->gamificacion()->first();
+
+        return view('student.activities.result', compact('actividad', 'intento', 'preguntas', 'respuestas', 'correctas', 'incorrectas', 'puedeReintentar', 'gamificacion'));
     }
 
     public function history(Request $request): View

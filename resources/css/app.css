@@ -243,6 +243,22 @@ body.student-page { min-width: 320px; min-height: 100vh; color: #30265d; backgro
 .reading-actions-row { display: flex; flex-wrap: wrap; gap: 10px; }
 .reading-notice,.reading-error { margin: 15px 0; padding: 12px 16px; border-radius: 12px; color: #24746e; background: #e3f8f4; font-size: 13px; }.reading-error { color: #a7374b; background: #fff0f1; }
 .reading-score { text-align: center; background: #fff6db; }.reading-score span { display: block; color: #826025; font-size: 13px; font-weight: 800; }.reading-score strong { display: block; margin: 5px 0; color: #6549b8; font-size: 52px; line-height: 1.1; }.reading-score p { color: #776c69; font-size: 12px; }
+.reading-result { margin-bottom: 25px; padding: 26px; border: 1px solid #ece8f6; border-radius: 25px; background: #fff; box-shadow: 0 8px 22px #3e34770b; }
+.reading-result-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 21px; }
+.reading-result-eyebrow { color: #7b63c7; font-size: 11px; font-weight: 850; letter-spacing: 1.2px; }
+.reading-result-heading h2 { margin-top: 5px; color: #3d315f; font-size: clamp(21px, 3vw, 27px); font-weight: 850; }
+.reading-result-date { color: #746c8a; font-size: 12px; line-height: 1.5; }
+.reading-result-date span { margin-right: 4px; }
+.reading-result-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 13px; }
+.reading-result-tile { display: flex; flex-direction: column; align-items: flex-start; grid-column: span 2; min-width: 0; min-height: 161px; padding: 18px; border-radius: 19px; }
+.reading-result-percent { color: #513da8; background: #eee9ff; }.reading-result-correct { color: #16786f; background: #dff7f2; }.reading-result-incorrect { color: #a54e4d; background: #ffebe7; }
+.reading-result-earned { grid-column: span 3; color: #79551a; background: #fff2d5; }.reading-result-total { grid-column: span 3; color: #533daa; background: #ece9ff; }
+.reading-result-icon { display: grid; width: 33px; height: 33px; margin-bottom: 10px; place-items: center; border-radius: 10px; background: #ffffffa8; font-size: 19px; font-weight: 850; }
+.reading-result-label { font-size: 12px; font-weight: 800; line-height: 1.35; }
+.reading-result-tile strong { margin-top: auto; font-size: clamp(29px, 4vw, 42px); font-weight: 850; line-height: 1.15; }
+.reading-result-tile p { margin-top: auto; font-size: 13px; font-weight: 700; line-height: 1.5; }
+.reading-result-tile small { margin-top: 5px; font-size: 11px; line-height: 1.35; }
+.reading-result-note { margin-top: 16px; color: #706587; font-size: 12px; }
 .reading-review-title { margin: 32px 0 16px; color: #3d315f; font-size: 22px; font-weight: 850; }
 .reading-review-card h3 { margin: 10px 0 16px; color: #43395f; font-size: 16px; font-weight: 800; }.reading-review-card p { margin-top: 9px; color: #706982; font-size: 13px; line-height: 1.5; }.reading-review-card strong { color: #3d315f; }
 .reading-review-status { padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; }.reading-review-status.is-correct { color: #187e6e; background: #dff8ec; }.reading-review-status.is-incorrect { color: #b84d55; background: #ffe8e6; }
@@ -252,4 +268,12 @@ body.student-page { min-width: 320px; min-height: 100vh; color: #30265d; backgro
     .reading-main { margin: 8px auto 45px; }.reading-hero { gap: 15px; min-height: 120px; padding: 20px; border-radius: 20px; }.reading-hero > span { width: 54px; height: 54px; border-radius: 16px; font-size: 30px; }
     .reading-card,.reading-question,.reading-review-card,.reading-history-card,.reading-score { padding: 20px; }.reading-text { font-size: 15px; }
     .reading-actions { align-items: flex-start; flex-direction: column; }.reading-history-card { align-items: flex-start; flex-direction: column; gap: 12px; }
+    .reading-result { padding: 20px; }.reading-result-heading { align-items: flex-start; flex-direction: column; }
+    .reading-result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .reading-result-tile,.reading-result-earned,.reading-result-total { grid-column: span 1; min-height: 145px; padding: 15px; }
+    .reading-result-percent { grid-column: span 2; }
+}
+@media (max-width: 390px) {
+    .reading-result-grid { grid-template-columns: 1fr; }
+    .reading-result-tile,.reading-result-earned,.reading-result-total,.reading-result-percent { grid-column: auto; min-height: 130px; }
 }

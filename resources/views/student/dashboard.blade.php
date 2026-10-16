@@ -56,11 +56,11 @@
                 <article class="student-stat student-stat-points">
                     <span class="student-stat-icon" aria-hidden="true">⭐</span>
                     <div>
-                        <p>Mis puntos</p>
+                        <p>Mis puntos acumulados</p>
                         @if ($gamificacion)
                             <strong>{{ number_format($gamificacion->puntos, 0, ',', ' ') }}</strong>
                         @else
-                            <span class="student-stat-empty">Aún sin registro</span>
+                            <span class="student-stat-empty">Aún no hay puntos registrados</span>
                         @endif
                     </div>
                 </article>
@@ -68,11 +68,7 @@
                     <span class="student-stat-icon" aria-hidden="true">📚</span>
                     <div>
                         <p>Actividades completadas</p>
-                        @if ($progreso)
-                            <strong>{{ number_format($progreso->actividades_completadas, 0, ',', ' ') }}</strong>
-                        @else
-                            <span class="student-stat-empty">Aún sin registro</span>
-                        @endif
+                        <strong>{{ number_format($actividadesCompletadas, 0, ',', ' ') }}</strong>
                     </div>
                 </article>
                 <article class="student-stat student-stat-badges">
@@ -100,10 +96,20 @@
                         <article class="student-activity-card">
                             <span class="student-activity-icon" aria-hidden="true">{{ $loop->odd ? '📘' : '📗' }}</span>
                             <div class="student-activity-copy">
+                                <span class="student-section-tag">{{ $actividad->tiene_intento_finalizado ? 'Resuelta' : ($actividad->intento_pendiente_id ? 'En progreso' : 'Nueva') }}</span>
                                 <h3><a href="{{ route('student.activities.show', $actividad) }}">{{ $actividad->titulo }}</a></h3>
                                 <p>{{ \Illuminate\Support\Str::limit(strip_tags($actividad->contenido), 110) }}</p>
+                                @if ($actividad->ultimo_porcentaje !== null)
+                                    <p>Último porcentaje: {{ number_format((float) $actividad->ultimo_porcentaje, 2, ',', ' ') }}%</p>
+                                @endif
                             </div>
-                            <a class="student-activity-label" href="{{ route('student.activities.show', $actividad) }}">Leer actividad →</a>
+                            @if ($actividad->tiene_intento_finalizado)
+                                <a class="student-activity-label" href="{{ route('student.activities.show', $actividad) }}">Repetir actividad →</a>
+                            @elseif ($actividad->intento_pendiente_id)
+                                <a class="student-activity-label" href="{{ route('student.attempts.edit', $actividad->intento_pendiente_id) }}">Continuar intento →</a>
+                            @else
+                                <a class="student-activity-label" href="{{ route('student.activities.show', $actividad) }}">Leer actividad →</a>
+                            @endif
                         </article>
                     @empty
                         <div class="student-empty">

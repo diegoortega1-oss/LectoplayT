@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActividadIntento;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -11,18 +12,35 @@ class StudentDashboardController extends Controller
     {
         $estudiante = $request->user()->estudiante()
             ->with([
-                'nivelActual.actividades' => fn ($query) => $query->where('estado', 'ACTIVA')->orderBy('titulo'),
-                'progreso',
+                'nivelActual',
                 'gamificacion',
                 'logros',
             ])
             ->first();
 
         $nivelActual = $estudiante?->nivelActual;
-        $progreso = $estudiante?->progreso;
+        $actividadesCompletadas = $estudiante?->intentos()
+            ->where('estado', 'FINALIZADO')
+            ->distinct()
+            ->count('actividad_id') ?? 0;
         $gamificacion = $estudiante?->gamificacion;
         $logros = $estudiante?->logros ?? collect();
-        $actividadesActivas = $nivelActual?->actividades ?? collect();
+        $actividadesActivas = $nivelActual?->actividades()
+            ->where('estado', 'ACTIVA')
+            ->withExists(['intentos as tiene_intento_finalizado' => fn ($query) => $query
+                ->where('estudiante_id', $estudiante->getKey())->where('estado', 'FINALIZADO')])
+            ->addSelect([
+                'intento_pendiente_id' => ActividadIntento::select('id_intento')
+                    ->whereColumn('actividad_id', 'actividad.id_actividad')
+                    ->where('estudiante_id', $estudiante->getKey())->where('estado', 'EN_PROCESO')
+                    ->orderByDesc('fecha_inicio')->orderByDesc('id_intento')->limit(1),
+                'ultimo_porcentaje' => ActividadIntento::select('puntaje')
+                    ->whereColumn('actividad_id', 'actividad.id_actividad')
+                    ->where('estudiante_id', $estudiante->getKey())->where('estado', 'FINALIZADO')
+                    ->whereNotNull('puntaje')
+                    ->orderByDesc('fecha_fin')->orderByDesc('id_intento')->limit(1),
+            ])
+            ->orderBy('titulo')->get() ?? collect();
 
         $ultimosIntentos = $estudiante?->intentos()
             ->with('actividad')
@@ -40,7 +58,7 @@ class StudentDashboardController extends Controller
             'titulo' => 'Estudiante',
             'estudiante' => $estudiante,
             'nivelActual' => $nivelActual,
-            'progreso' => $progreso,
+            'actividadesCompletadas' => $actividadesCompletadas,
             'gamificacion' => $gamificacion,
             'logros' => $logros,
             'actividadesActivas' => $actividadesActivas,
