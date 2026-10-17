@@ -1,59 +1,304 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# LectoPlay
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Sistema web gamificado adaptativo para reforzar la comprensión lectora en estudiantes de primaria de la I.E. 1221 María Parado de Bellido.**
 
-## About Laravel
+## 1. Descripción del proyecto
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+LectoPlay es un sistema web desarrollado como parte de un proyecto de tesis de Ingeniería de Sistemas. Su propósito es reforzar la comprensión lectora de estudiantes de educación primaria mediante actividades de lectura, evaluación del desempeño y elementos de gamificación.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+La propuesta contempla el seguimiento del progreso de los estudiantes y la adaptación de las actividades según su nivel de aprendizaje, con el objetivo de ofrecer una experiencia educativa más motivadora y adecuada a sus necesidades.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 2. Objetivos
 
-## Learning Laravel
+- Reforzar la comprensión lectora en las dimensiones literal, inferencial y crítica.
+- Ofrecer actividades de lectura de acuerdo con el nivel asignado al estudiante.
+- Incorporar elementos de gamificación para motivar la participación.
+- Registrar los resultados de las actividades y el progreso de los estudiantes.
+- Facilitar a docentes y administradores el acceso a funcionalidades según su rol.
+- Incorporar mecanismos de adaptación que permitan recomendar actividades según el desempeño.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 3. Tecnologías utilizadas
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Backend:** PHP y Laravel.
+- **Frontend:** Blade, HTML y CSS.
+- **Base de datos:** MySQL.
+- **Entorno local:** XAMPP.
+- **Editor de código:** Visual Studio Code.
+- **Control de versiones:** Git y GitHub.
 
-## Laravel Sponsors
+## 4. Funcionalidades
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Implementadas
 
-### Premium Partners
+- Autenticación de usuarios.
+- Inicio de sesión con validación de credenciales y estado del usuario.
+- Control de acceso según los roles de estudiante, docente y administrador.
+- Panel principal del estudiante.
+- Visualización del nivel asignado, puntos, logros y actividades.
+- Listado de actividades activas correspondientes al nivel del estudiante.
+- Desarrollo y resolución de actividades de lectura.
+- Guardado y edición de respuestas durante un intento en curso.
+- Finalización de actividades y visualización de resultados.
+- Historial de intentos realizados por el estudiante.
+- Registro de puntos de gamificación según las reglas implementadas.
+- Pruebas automatizadas para validar el flujo de actividades.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### En desarrollo
 
-## Contributing
+- Diagnóstico inicial de comprensión lectora.
+- Asignación automática del nivel inicial a partir del resultado del diagnóstico.
+- Recomendaciones adaptativas de actividades.
+- Ampliación de las funcionalidades de seguimiento para docentes y administradores.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+El estado de las funcionalidades se actualizará conforme avance el desarrollo.
 
-## Code of Conduct
+## 5. Requisitos previos
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Para ejecutar el proyecto localmente, se necesita:
 
-## Security Vulnerabilities
+- PHP 8.2 o una versión compatible con las dependencias del proyecto.
+- Composer.
+- MySQL.
+- XAMPP u otro entorno que proporcione PHP y MySQL.
+- Git.
+- Node.js y npm, si se requiere instalar o compilar los recursos frontend.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Las versiones compatibles pueden consultarse en `composer.json` y `package.json`, si este último está presente.
 
-## License
+## 6. Instalación y ejecución
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 6.1. Obtener el código fuente
+
+Clona el repositorio:
+
+```bash
+git clone URL_DEL_REPOSITORIO
+cd Lectoplay
+```
+
+Reemplaza `URL_DEL_REPOSITORIO` por la dirección real del repositorio.
+
+Si ya tienes el proyecto descargado, puedes omitir este paso.
+
+### 6.2. Instalar dependencias de PHP
+
+Desde la raíz del proyecto, ejecuta:
+
+```bash
+composer install
+```
+
+### 6.3. Configurar las variables de entorno
+
+Copia el archivo de ejemplo:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Si ya tienes un archivo `.env`, no lo sobrescribas.
+
+Configura las variables necesarias para la aplicación y la conexión a MySQL. Por ejemplo:
+
+```env
+APP_NAME=LectoPlay
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://127.0.0.1:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=bdlectoplay
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Los valores anteriores son ilustrativos para un entorno local. Deben ajustarse a la configuración de MySQL de cada equipo. No se deben publicar credenciales reales.
+
+### 6.4. Generar la clave de Laravel
+
+Si se trata de una instalación nueva y el archivo `.env` no contiene una clave válida, ejecuta:
+
+```bash
+php artisan key:generate
+```
+
+### 6.5. Preparar la base de datos
+
+El proyecto incluye un archivo SQL de referencia ubicado en:
+
+```text
+database/backup/bdlectoplay.sql
+```
+
+Para preparar la base de datos en un entorno local:
+
+1. Inicia MySQL desde XAMPP.
+2. Abre phpMyAdmin en `http://localhost/phpmyadmin`.
+3. Crea una base de datos llamada `bdlectoplay`, si todavía no existe.
+4. Selecciona la base de datos creada.
+5. Accede a la pestaña **Importar**.
+6. Selecciona `database/backup/bdlectoplay.sql` e inicia la importación.
+7. Comprueba que las tablas se hayan creado correctamente.
+8. Verifica las credenciales de conexión del archivo `.env`.
+
+**Importante:** el archivo SQL debe corresponder a la estructura y los datos necesarios para la versión del proyecto que se está ejecutando. Debe probarse en una base de datos vacía antes de utilizarse como procedimiento de instalación.
+
+No ejecutes migraciones sobre una base de datos existente sin verificar previamente su estado y compatibilidad.
+
+### 6.6. Ejecutar la aplicación
+
+Desde la raíz del proyecto, ejecuta:
+
+```bash
+php artisan serve
+```
+
+Abre en el navegador la dirección indicada por Laravel, normalmente:
+
+http://127.0.0.1:8000
+
+## 7. Pruebas automatizadas
+
+Para ejecutar las pruebas automatizadas disponibles, utiliza:
+
+```bash
+php artisan test
+```
+
+Las pruebas deben ejecutarse en el entorno configurado para testing. Si utilizan SQLite en memoria, sus resultados no sustituyen las pruebas de integración sobre MySQL.
+
+## 8. Estructura principal del proyecto
+
+```text
+Lectoplay/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Auth/
+│   │   │   │   └── LoginController.php
+│   │   │   ├── Controller.php
+│   │   │   ├── StudentActivityController.php
+│   │   │   └── StudentDashboardController.php
+│   │   ├── Middleware/
+│   │   │   └── EnsureRole.php
+│   │   ├── Models/
+│   │   │   ├── Actividad.php
+│   │   │   ├── ActividadIntento.php
+│   │   │   ├── Administrador.php
+│   │   │   ├── Docente.php
+│   │   │   ├── Estudiante.php
+│   │   │   ├── Evaluacion.php
+│   │   │   ├── Gamificacion.php
+│   │   │   ├── Logro.php
+│   │   │   ├── Nivel.php
+│   │   │   ├── Pregunta.php
+│   │   │   ├── Progreso.php
+│   │   │   ├── Respuesta.php
+│   │   │   ├── RespuestaActividad.php
+│   │   │   ├── User.php
+│   │   │   └── Usuario.php
+│   │   └── Providers/
+│   │       └── AppServiceProvider.php
+├── bootstrap/
+│   ├── app.php
+│   └── providers.php
+├── config/
+│   ├── app.php
+│   ├── auth.php
+│   ├── cache.php
+│   ├── database.php
+│   ├── filesystems.php
+│   ├── gamification.php
+│   ├── logging.php
+│   ├── mail.php
+│   ├── queue.php
+│   ├── services.php
+│   └── session.php
+├── database/
+│   ├── backups/
+│   │   └── bdlectoplay.sql
+│   ├── factories/
+│   │   └── UserFactory.php
+│   ├── migrations/
+│   │   ├── 0001_01_01_000000_create_users_table.php
+│   │   ├── 0001_01_01_000001_create_cache_table.php
+│   │   ├── 0001_01_01_000002_create_jobs_table.php
+│   │   └── 2026_10_15_000001_add_puntos_obtenidos_to_actividad_intento_table.php
+│   └── seeders/
+│       └── DatabaseSeeder.php
+├── public/
+│   ├── favicon.ico
+│   ├── index.php
+│   └── robots.txt
+├── resources/
+│   ├── css/
+│   │   └── app.css
+│   ├── js/
+│   │   ├── app.js
+│   │   └── bootstrap.js
+│   └── views/
+│       ├── auth/
+│       │   ├── login.blade.php
+│       │   └── panel.blade.php
+│       ├── student/
+│       │   ├── activities/
+│       │   │   ├── _header.blade.php
+│       │   │   ├── attempt.blade.php
+│       │   │   ├── history.blade.php
+│       │   │   ├── result.blade.php
+│       │   │   └── show.blade.php
+│       │   └── dashboard.blade.php
+│       └── welcome.blade.php
+├── routes/
+│   ├── console.php
+│   └── web.php
+├── storage/
+│   └── logs/
+│       └── .gitignore
+├── tests/
+│   ├── Feature/
+│   │   ├── ExampleTest.php
+│   │   └── StudentActivityFlowTest.php
+│   ├── Unit/
+│   │   └── ExampleTest.php
+│   ├── Pest.php
+│   └── TestCase.php
+├── .editorconfig
+├── .env.example
+├── .gitattributes
+├── .gitignore
+├── artisan
+├── composer.json
+├── composer.lock
+├── package.json
+├── package-lock.json
+├── phpunit.xml
+├── README.md
+└── vite.config.js
+```
+
+La estructura mostrada resume los directorios principales y puede variar conforme avance el desarrollo.
+
+## 9. Base de datos y seguridad
+
+- El archivo `.env` contiene configuración local y no debe publicarse.
+- No deben incluirse contraseñas reales ni credenciales de acceso.
+- Los archivos SQL deben revisarse antes de publicarse para evitar exponer información personal o sensible.
+- Los datos de demostración, si se incluyen, deben ser ficticios o estar preparados para su distribución segura.
+- La base de datos utilizada para pruebas debe estar separada de la base de datos de desarrollo.
+
+## 10. Control de versiones
+
+El código fuente se administra mediante Git y se publica en un repositorio remoto para documentar la evolución del proyecto.
+
+Los commits deben representar cambios reales, como la implementación de funcionalidades, correcciones, pruebas y actualizaciones de documentación.
+
+## 11. Contexto académico
+
+- **Proyecto:** LectoPlay.
+- **Área:** Ingeniería de Sistemas.
+- **Tipo:** Proyecto de tesis.
+- **Institución educativa de aplicación:** I.E. N.° 1221 María Parado de Bellido.
+
