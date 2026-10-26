@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CuestionarioDiagnostico;
 use App\Models\Evaluacion;
+use App\Models\Nivel;
 use App\Services\DiagnosticoInicialService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -241,6 +242,111 @@ class StudentDiagnosticController extends Controller
         $this->asegurarLecturasPreviasCompletas($evaluacion, $totalLecturas + 1);
 
         return response()->view('student.diagnostic.resumen', compact('totalLecturas'));
+    }
+
+    public function finalizar(Request $request, DiagnosticoInicialService $diagnostico): Response
+    {
+        return DB::transaction(function () use ($request, $diagnostico): Response {
+            $estudiante = $request->user()->estudiante()->lockForUpdate()->firstOrFail();
+            $estado = $diagnostico->determinarEstado($estudiante);
+
+            if ($estado === DiagnosticoInicialService::DIAGNOSTICO_FINALIZADO) {
+                return redirect()->route('diagnostico.resultado');
+            }
+
+            abort_unless(
+                $estado === DiagnosticoInicialService::DIAGNOSTICO_EN_PROCESO,
+                Response::HTTP_CONFLICT,
+                'No hay un diagnóstico en proceso que pueda finalizarse.',
+            );
+
+            $evaluacion = $estudiante->evaluaciones()
+                ->where('estado', 'EN_PROCESO')
+                ->whereHas('cuestionario', fn ($query) => $query->where('estado', 'ACTIVO'))
+                ->lockForUpdate()
+                ->firstOrFail(['id_evaluacion', 'estudiante_id', 'cuestionario_id', 'estado']);
+
+            abort_unless($evaluacion->estado === 'EN_PROCESO', Response::HTTP_CONFLICT);
+            abort_unless(
+                $evaluacion->cuestionario->lecturas()->count() === 3,
+                Response::HTTP_CONFLICT,
+                'El diagnóstico no tiene tres lecturas disponibles.',
+            );
+            $this->asegurarLecturasPreviasCompletas($evaluacion, 4);
+
+            $preguntas = $evaluacion->cuestionario->preguntas()
+                ->get(['id_pregunta', 'respuesta_correcta']);
+            abort_unless(
+                $preguntas->count() === 15 && $preguntas->pluck('id_pregunta')->unique()->count() === 15,
+                Response::HTTP_CONFLICT,
+                'El diagnóstico no tiene quince preguntas válidas.',
+            );
+
+            $respuestas = $evaluacion->respuestas()
+                ->get(['pregunta_id', 'alternativa']);
+            $idsEsperados = $preguntas->pluck('id_pregunta')->map(fn ($id) => (string) $id)->sort()->values()->all();
+            $idsRespondidos = $respuestas->pluck('pregunta_id')->map(fn ($id) => (string) $id)->sort()->values()->all();
+
+            abort_unless(
+                $respuestas->count() === 15 && $idsRespondidos === $idsEsperados,
+                Response::HTTP_CONFLICT,
+                'Debes responder las quince preguntas del diagnóstico antes de finalizar.',
+            );
+
+            $alternativas = $respuestas->pluck('alternativa', 'pregunta_id');
+            $aciertos = 0;
+            foreach ($preguntas as $pregunta) {
+                $alternativa = $alternativas->get($pregunta->getKey());
+                abort_unless(
+                    in_array($alternativa, ['A', 'B', 'C', 'D'], true)
+                        && in_array($pregunta->respuesta_correcta, ['A', 'B', 'C', 'D'], true),
+                    Response::HTTP_CONFLICT,
+                    'Una respuesta o una clave de pregunta necesita revisión.',
+                );
+                $aciertos += (int) ($alternativa === $pregunta->respuesta_correcta);
+            }
+
+            $porcentaje = round($aciertos / 15 * 100, 2);
+            $niveles = Nivel::query()
+                ->where('rango_min', '<=', $porcentaje)
+                ->where('rango_max', '>=', $porcentaje)
+                ->get(['id_nivel']);
+            abort_unless(
+                $niveles->count() === 1,
+                Response::HTTP_CONFLICT,
+                'Los rangos de niveles necesitan revisión.',
+            );
+
+            $nivelId = $niveles->first()->getKey();
+            $evaluacion->update([
+                'estado' => 'FINALIZADA',
+                'fecha_fin' => now(),
+                'puntaje' => $porcentaje,
+                'nivel_id' => $nivelId,
+            ]);
+            $estudiante->update(['nivel_actual_id' => $nivelId]);
+
+            return redirect()->route('diagnostico.resultado');
+        });
+    }
+
+    public function resultado(Request $request): Response
+    {
+        $estudiante = $request->user()->estudiante()->firstOrFail();
+        $evaluacion = $estudiante->evaluaciones()
+            ->whereNotNull('cuestionario_id')
+            ->where('tipo', 'DIAGNOSTICA')
+            ->where('estado', 'FINALIZADA')
+            ->with('nivel:id_nivel,nombre')
+            ->orderByDesc('fecha_fin')
+            ->firstOrFail(['id_evaluacion', 'cuestionario_id', 'puntaje', 'nivel_id', 'fecha_fin']);
+
+        abort_unless($evaluacion->puntaje !== null && $evaluacion->nivel !== null, Response::HTTP_CONFLICT);
+
+        $aciertos = (int) round((float) $evaluacion->puntaje * 15 / 100);
+        $notaVigesimal = round($aciertos / 15 * 20, 2);
+
+        return response()->view('student.diagnostic.resultado', compact('evaluacion', 'aciertos', 'notaVigesimal'));
     }
 
     private function asegurarLecturasPreviasCompletas(Evaluacion $evaluacion, int $orden): void

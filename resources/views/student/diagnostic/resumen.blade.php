@@ -28,6 +28,10 @@
         </section>
         <div class="reading-actions">
             <a class="reading-back" href="{{ route('diagnostico.lectura', ['orden' => $totalLecturas]) }}">Volver a la última lectura</a>
+            <form method="POST" action="{{ route('diagnostico.finalizar') }}">
+                @csrf
+                <button class="reading-button" type="submit">Finalizar diagnóstico</button>
+            </form>
         </div>
     </main>
 </div>
