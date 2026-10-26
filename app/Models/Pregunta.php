@@ -15,6 +15,10 @@ class Pregunta extends Model
     protected $fillable = [
         'evaluacion_id',
         'actividad_id',
+        'cuestionario_id',
+        'lectura_diagnostica_id',
+        'dimension',
+        'orden',
         'enunciado',
         'alternativa_a',
         'alternativa_b',
@@ -31,6 +35,16 @@ class Pregunta extends Model
     public function actividad(): BelongsTo
     {
         return $this->belongsTo(Actividad::class, 'actividad_id', 'id_actividad');
+    }
+
+    public function cuestionario(): BelongsTo
+    {
+        return $this->belongsTo(CuestionarioDiagnostico::class, 'cuestionario_id', 'id_cuestionario');
+    }
+
+    public function lecturaDiagnostica(): BelongsTo
+    {
+        return $this->belongsTo(LecturaDiagnostica::class, 'lectura_diagnostica_id', 'id_lectura');
     }
 
     public function respuestas(): HasMany

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\StudentActivityController;
 use App\Http\Controllers\StudentDashboardController;
+use App\Http\Controllers\StudentDiagnosticController;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/estudiante', StudentDashboardController::class)
         ->middleware('role:'.Usuario::ROL_ESTUDIANTE)->name('panel.estudiante');
     Route::middleware('role:'.Usuario::ROL_ESTUDIANTE)->group(function () {
+        Route::get('/estudiante/diagnostico', [StudentDiagnosticController::class, 'index'])->name('diagnostico.index');
+        Route::post('/estudiante/diagnostico/iniciar', [StudentDiagnosticController::class, 'iniciar'])->name('diagnostico.iniciar');
+        Route::get('/estudiante/diagnostico/en-proceso', [StudentDiagnosticController::class, 'enProceso'])->name('diagnostico.en-proceso');
+        Route::get('/estudiante/diagnostico/resumen', [StudentDiagnosticController::class, 'resumen'])->name('diagnostico.resumen');
+        Route::get('/estudiante/diagnostico/lectura/{orden}', [StudentDiagnosticController::class, 'lectura'])->whereNumber('orden')->name('diagnostico.lectura');
+        Route::post('/estudiante/diagnostico/lectura/{orden}/guardar', [StudentDiagnosticController::class, 'guardar'])->whereNumber('orden')->name('diagnostico.guardar');
         Route::get('/estudiante/actividades/historial', [StudentActivityController::class, 'history'])->name('student.activities.history');
         Route::get('/estudiante/actividades/{actividad}', [StudentActivityController::class, 'show'])->name('student.activities.show');
         Route::post('/estudiante/actividades/{actividad}/intentos', [StudentActivityController::class, 'start'])->name('student.activities.start');

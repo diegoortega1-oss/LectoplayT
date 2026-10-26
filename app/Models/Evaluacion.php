@@ -14,8 +14,11 @@ class Evaluacion extends Model
 
     protected $fillable = [
         'estudiante_id',
+        'cuestionario_id',
         'tipo',
+        'estado',
         'fecha',
+        'fecha_fin',
         'puntaje',
         'nivel_id',
     ];
@@ -24,6 +27,7 @@ class Evaluacion extends Model
     {
         return [
             'fecha' => 'datetime',
+            'fecha_fin' => 'datetime',
             'puntaje' => 'decimal:2',
         ];
     }
@@ -31,6 +35,11 @@ class Evaluacion extends Model
     public function estudiante(): BelongsTo
     {
         return $this->belongsTo(Estudiante::class, 'estudiante_id', 'id_estudiante');
+    }
+
+    public function cuestionario(): BelongsTo
+    {
+        return $this->belongsTo(CuestionarioDiagnostico::class, 'cuestionario_id', 'id_cuestionario');
     }
 
     public function nivel(): BelongsTo
