@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\StudentActivityController;
 use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\StudentDiagnosticController;
+use App\Http\Controllers\StudentProgressController;
 use App\Http\Middleware\EnsureStudentDiagnosticAccess;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/estudiante/diagnostico/lectura/{orden}/guardar', [StudentDiagnosticController::class, 'guardar'])->whereNumber('orden')->name('diagnostico.guardar');
         Route::middleware(EnsureStudentDiagnosticAccess::class)->group(function () {
             Route::get('/estudiante', StudentDashboardController::class)->name('panel.estudiante');
+            Route::get('/estudiante/progreso', StudentProgressController::class)->name('student.progress');
             Route::get('/estudiante/actividades/historial', [StudentActivityController::class, 'history'])->name('student.activities.history');
             Route::get('/estudiante/actividades/{actividad}', [StudentActivityController::class, 'show'])->name('student.activities.show');
             Route::post('/estudiante/actividades/{actividad}/intentos', [StudentActivityController::class, 'start'])->name('student.activities.start');

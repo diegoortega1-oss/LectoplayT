@@ -4,7 +4,9 @@
     </a>
     <nav class="student-nav" aria-label="Navegación de actividades">
         <a href="{{ route('panel.estudiante') }}">Mi espacio</a>
+        <a href="{{ route('student.progress') }}">Mi progreso</a>
         <a href="{{ route('student.activities.history') }}">Historial</a>
+        <a href="{{ route('panel.estudiante') }}#logros">Mis logros</a>
     </nav>
     <form method="POST" action="{{ route('logout') }}">@csrf <button class="student-logout" type="submit">Cerrar sesión</button></form>
 </header>

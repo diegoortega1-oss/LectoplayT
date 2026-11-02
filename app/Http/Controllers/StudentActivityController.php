@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Actividad;
 use App\Models\ActividadIntento;
+use App\Models\AdaptacionNivelActividad;
 use App\Models\Estudiante;
 use App\Models\Pregunta;
+use App\Services\AdaptacionNivelService;
 use App\Services\RegistroAdaptacionNivelService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -181,14 +183,79 @@ class StudentActivityController extends Controller
         return view('student.activities.result', compact('actividad', 'intento', 'preguntas', 'respuestas', 'correctas', 'incorrectas', 'puedeReintentar', 'gamificacion'));
     }
 
-    public function history(Request $request): View
+    public function history(Request $request, AdaptacionNivelService $adaptacion): View
     {
         $estudiante = $this->student($request);
-        $intentos = $estudiante->intentos()->with('actividad')->orderByDesc('fecha_inicio')->paginate(10);
+        $intentos = $estudiante->intentos()
+            // withTrashed: las actividades eliminadas lógicamente conservan su título y nivel en el historial.
+            ->with(['actividad' => fn ($query) => $query->withTrashed()->with('nivel:id_nivel,nombre')])
+            ->orderByDesc('fecha_inicio')
+            ->orderByDesc('id_intento')
+            ->paginate(10);
 
         $nivelActualId = $estudiante->nivel_actual_id;
+        $actividadIds = $intentos->getCollection()->pluck('actividad_id')->unique()->values()->all();
 
-        return view('student.activities.history', compact('intentos', 'nivelActualId'));
+        // Una sola consulta para todas las actividades de la página: primer intento y mejor resultado.
+        $resumenActividades = $estudiante->intentos()
+            ->whereIn('actividad_id', $actividadIds)
+            ->where('estado', 'FINALIZADO')
+            ->get(['id_intento', 'actividad_id', 'puntaje', 'fecha_fin'])
+            ->groupBy('actividad_id')
+            ->map(fn (Collection $grupo): array => $this->resumenActividad($grupo));
+
+        // Intentos que ya participaron en una decisión de adaptación, con su decisión.
+        $intentosUsados = AdaptacionNivelActividad::query()
+            ->where('estudiante_id', $estudiante->getKey())
+            ->whereIn('actividad_id', $actividadIds)
+            ->with('adaptacion:id_adaptacion,decision')
+            ->get(['adaptacion_id', 'actividad_id', 'intento_id'])
+            ->mapWithKeys(fn (AdaptacionNivelActividad $detalle): array => [
+                (int) $detalle->intento_id => $detalle->adaptacion?->decision,
+            ]);
+
+        // Intentos que el motor tomaría en su próxima revisión (consulta de solo lectura).
+        $intentosProximaRevision = collect($adaptacion->evaluar($estudiante)['actividades_consideradas'])
+            ->pluck('intento_id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+
+        return view('student.activities.history', compact(
+            'intentos', 'nivelActualId', 'resumenActividades', 'intentosUsados', 'intentosProximaRevision'
+        ));
+    }
+
+    /**
+     * Primer intento global finalizado (mismo orden que AdaptacionNivelService: fecha_fin
+     * ascendente con nulos primero y luego id_intento) y mejor porcentaje de la actividad.
+     *
+     * @return array{primer_intento_id: int|null, mejor_intento_id: int|null, mejor_puntaje: float|null, finalizados: int}
+     */
+    private function resumenActividad(Collection $grupo): array
+    {
+        $ordenados = $grupo->sort(function (ActividadIntento $a, ActividadIntento $b): int {
+            if ($a->fecha_fin === null || $b->fecha_fin === null) {
+                $porFecha = ($a->fecha_fin === null ? 0 : 1) <=> ($b->fecha_fin === null ? 0 : 1);
+            } else {
+                $porFecha = $a->fecha_fin->getTimestamp() <=> $b->fecha_fin->getTimestamp();
+            }
+
+            return $porFecha !== 0 ? $porFecha : ((int) $a->getKey() <=> (int) $b->getKey());
+        })->values();
+
+        $conPuntaje = $ordenados->filter(fn (ActividadIntento $intento): bool => is_numeric($intento->puntaje));
+        $mejorCentesimas = $conPuntaje->max(fn (ActividadIntento $intento): int => (int) round((float) $intento->puntaje * 100));
+        // Ante empates, se marca el primero que alcanzó el mejor resultado.
+        $mejorIntento = $mejorCentesimas === null ? null : $conPuntaje->first(
+            fn (ActividadIntento $intento): bool => (int) round((float) $intento->puntaje * 100) === $mejorCentesimas
+        );
+
+        return [
+            'primer_intento_id' => $ordenados->isEmpty() ? null : (int) $ordenados->first()->getKey(),
+            'mejor_intento_id' => $mejorIntento === null ? null : (int) $mejorIntento->getKey(),
+            'mejor_puntaje' => $mejorCentesimas === null ? null : $mejorCentesimas / 100,
+            'finalizados' => $ordenados->count(),
+        ];
     }
 
     private function student(Request $request): Estudiante

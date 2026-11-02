@@ -17,6 +17,7 @@
             <nav class="student-nav" aria-label="Secciones del panel">
                 <a href="#inicio">Inicio</a>
                 <a href="#actividades">Actividades</a>
+                <a href="{{ route('student.progress') }}">Mi progreso</a>
                 <a href="{{ route('student.activities.history') }}">Historial</a>
                 <a href="#logros">Mis logros</a>
             </nav>
