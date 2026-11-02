@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Actividad;
+use App\Models\ActividadIntento;
 use App\Models\AdaptacionNivel;
 use App\Models\Estudiante;
 use App\Models\Nivel;
@@ -52,7 +53,49 @@ class StudentProgressController extends Controller
             'recorrido' => $this->recorrido($diagnostico, $adaptaciones),
             'avance' => $this->avance($adaptacion->evaluar($estudiante), $estudiante),
             'puedeVerDiagnostico' => $diagnostico !== null && $diagnostico->puntaje !== null && $diagnostico->nivel !== null,
+            'evolucion' => $this->evolucion($estudiante),
         ]);
+    }
+
+    /**
+     * Primer intento finalizado de cada actividad, en orden cronológico, para la gráfica.
+     *
+     * Una sola consulta, sin cargar respuestas. El orden es el del motor adaptativo y del
+     * historial: intentos sin fecha_fin primero (heredados), luego fecha_fin ascendente y,
+     * ante empates, id_intento. Al recorrer las filas en ese orden, la primera aparición de
+     * cada actividad es su primer intento, y la secuencia resultante ya queda cronológica.
+     * Incluye actividades eliminadas lógicamente para conservar el historial.
+     *
+     * @return list<array{titulo: string, nivel: string|null, fecha: string|null, porcentaje: float|null}>
+     */
+    private function evolucion(Estudiante $estudiante): array
+    {
+        return ActividadIntento::query()
+            ->join('actividad', 'actividad.id_actividad', '=', 'actividad_intento.actividad_id')
+            ->leftJoin('nivel', 'nivel.id_nivel', '=', 'actividad.nivel_id')
+            ->where('actividad_intento.estudiante_id', $estudiante->getKey())
+            ->where('actividad_intento.estado', 'FINALIZADO')
+            ->orderByRaw('CASE WHEN actividad_intento.fecha_fin IS NULL THEN 0 ELSE 1 END')
+            ->orderBy('actividad_intento.fecha_fin')
+            ->orderBy('actividad_intento.id_intento')
+            ->get([
+                'actividad_intento.id_intento',
+                'actividad_intento.actividad_id',
+                'actividad_intento.puntaje',
+                'actividad_intento.fecha_fin',
+                'actividad.titulo',
+                'nivel.nombre as nivel_nombre',
+            ])
+            ->unique('actividad_id')
+            ->map(fn (ActividadIntento $intento): array => [
+                'titulo' => $intento->titulo,
+                'nivel' => $intento->nivel_nombre,
+                // Sin fecha_fin no se inventa una fecha: la vista lo indica como no registrada.
+                'fecha' => $intento->fecha_fin?->format('d/m/Y'),
+                'porcentaje' => is_numeric($intento->puntaje) ? (float) $intento->puntaje : null,
+            ])
+            ->values()
+            ->all();
     }
 
     /**

@@ -6,6 +6,26 @@
     <meta name="theme-color" content="#624bc9">
     <title>Mi progreso | LectoPlay</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- Estilos propios de la gráfica de evolución: se definen aquí para no requerir recompilar los recursos de Vite. --}}
+    <style>
+        .evolucion-grafica { display: flex; gap: 10px; margin-top: 18px; }
+        .evolucion-escala { display: flex; flex: none; flex-direction: column; justify-content: space-between; height: 180px; margin-top: 26px; color: #8c85a3; font-size: 11px; font-weight: 700; text-align: right; }
+        .evolucion-barras { display: flex; flex: 1; gap: 12px; min-width: 0; margin: 0; padding: 0 0 10px; overflow-x: auto; list-style: none; }
+        .evolucion-item { display: flex; flex: 0 0 92px; flex-direction: column; align-items: center; gap: 5px; text-align: center; }
+        .evolucion-valor { color: #332763; font-size: 14px; font-weight: 850; line-height: 21px; }
+        .evolucion-columna { display: flex; align-items: flex-end; width: 44px; height: 180px; overflow: hidden; border-radius: 12px 12px 6px 6px; background: repeating-linear-gradient(to top, #f4f1fc 0, #f4f1fc 89px, #e6e0f7 89px, #e6e0f7 90px); }
+        .evolucion-barra { display: block; width: 100%; min-height: 3px; border-radius: 10px 10px 4px 4px; background: #9a8fbd; }
+        .evolucion-nivel-basico { background: #2fb5a6; }
+        .evolucion-nivel-intermedio { background: #f0a43a; }
+        .evolucion-nivel-avanzado { background: #6a52cf; }
+        .evolucion-titulo { display: -webkit-box; overflow: hidden; color: #3d315f; font-size: 11px; font-weight: 800; line-height: 1.3; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+        .evolucion-fecha, .evolucion-nivel { color: #77718e; font-size: 11px; line-height: 1.3; }
+        .evolucion-nivel { padding: 3px 8px; border-radius: 999px; background: #ebe5ff; color: #5d47bf; font-weight: 800; }
+        @media (max-width: 480px) {
+            .evolucion-escala { display: none; }
+            .evolucion-item { flex-basis: 80px; }
+        }
+    </style>
 </head>
 <body class="student-page">
 <div class="student-layout">
@@ -77,6 +97,52 @@
         @if (count($recorrido) === 1 && $puedeVerDiagnostico)
             <p class="reading-result-note">Cuando termines 3 lecturas nuevas de tu nivel, aquí aparecerá tu siguiente paso.</p>
         @endif
+
+        <section class="reading-card" aria-labelledby="progreso-evolucion">
+            <h2 id="progreso-evolucion">Evolución de mis lecturas</h2>
+            @if (count($evolucion) === 0)
+                <div class="student-empty">
+                    <span aria-hidden="true">📊</span>
+                    <h3>Aún no hay resultados</h3>
+                    <p>Cuando termines tus primeras lecturas, podrás ver aquí tus resultados.</p>
+                </div>
+            @else
+                @if (count($evolucion) === 1)
+                    <p>Este es el resultado de la primera vez que terminaste una lectura. Cuando termines más lecturas, aquí podrás compararlos.</p>
+                @else
+                    <p>Cada barra muestra el resultado de la primera vez que terminaste una lectura, de la más antigua a la más reciente.</p>
+                @endif
+                <p><small>Las veces que volviste a practicar no aparecen aquí. Puedes verlas en tu historial.</small></p>
+
+                <div class="evolucion-grafica">
+                    <div class="evolucion-escala" aria-hidden="true"><span>100 %</span><span>50 %</span><span>0 %</span></div>
+                    <ol class="evolucion-barras" aria-label="Resultados de tus lecturas, de la más antigua a la más reciente">
+                        @foreach ($evolucion as $punto)
+                            @php
+                                $altura = $punto['porcentaje'] === null ? 0 : max(0, min(100, $punto['porcentaje']));
+                                $claseNivel = match ($punto['nivel']) {
+                                    'Básico' => 'evolucion-nivel-basico',
+                                    'Intermedio' => 'evolucion-nivel-intermedio',
+                                    'Avanzado' => 'evolucion-nivel-avanzado',
+                                    default => '',
+                                };
+                            @endphp
+                            <li class="evolucion-item">
+                                <span class="evolucion-valor">{{ $punto['porcentaje'] === null ? 'Sin dato' : number_format($punto['porcentaje'], fmod($punto['porcentaje'], 1.0) == 0.0 ? 0 : 2, ',', ' ').' %' }}</span>
+                                <span class="evolucion-columna" aria-hidden="true">
+                                    <span class="evolucion-barra {{ $claseNivel }}" style="height: {{ number_format($altura, 2, '.', '') }}%"></span>
+                                </span>
+                                <span class="evolucion-titulo" title="{{ $punto['titulo'] }}">{{ $loop->iteration }}. {{ $punto['titulo'] }}</span>
+                                <span class="evolucion-fecha">{{ $punto['fecha'] ?? 'Fecha no registrada' }}</span>
+                                @if ($punto['nivel'])
+                                    <span class="evolucion-nivel">{{ $punto['nivel'] }}</span>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ol>
+                </div>
+            @endif
+        </section>
 
         <div class="reading-actions">
             <p>

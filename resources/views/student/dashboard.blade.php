@@ -15,7 +15,7 @@
                 <span>Lecto<span>Play</span></span>
             </a>
             <nav class="student-nav" aria-label="Secciones del panel">
-                <a href="#inicio">Inicio</a>
+                <a href="#inicio">Mi espacio</a>
                 <a href="#actividades">Actividades</a>
                 <a href="{{ route('student.progress') }}">Mi progreso</a>
                 <a href="{{ route('student.activities.history') }}">Historial</a>
@@ -36,7 +36,7 @@
                     <div class="student-level-pill">
                         <span aria-hidden="true">🌟</span>
                         @if ($nivelActual)
-                            Tu nivel: <strong>{{ $nivelActual->nombre }}</strong>
+                            Tu nivel lector: <strong>{{ $nivelActual->nombre }}</strong>
                         @else
                             Tu nivel aparecerá aquí cuando esté disponible
                         @endif
@@ -63,13 +63,15 @@
                         @else
                             <span class="student-stat-empty">Aún no hay puntos registrados</span>
                         @endif
+                        <span class="student-stat-empty">Son tus puntos de juego. No cambian tu nivel lector.</span>
                     </div>
                 </article>
                 <article class="student-stat student-stat-done">
                     <span class="student-stat-icon" aria-hidden="true">📚</span>
                     <div>
-                        <p>Actividades completadas</p>
+                        <p>Lecturas completadas en total</p>
                         <strong>{{ number_format($actividadesCompletadas, 0, ',', ' ') }}</strong>
+                        <span class="student-stat-empty">Cada lectura cuenta una sola vez, aunque la repitas.</span>
                     </div>
                 </article>
                 <article class="student-stat student-stat-badges">
@@ -94,17 +96,35 @@
                     </div>
 
                     @forelse ($actividadesActivas as $actividad)
+                        @php
+                            $finalizados = (int) $actividad->intentos_finalizados;
+                            $porcentaje = fn ($valor) => $valor === null ? 'sin dato' : number_format((float) $valor, 2, ',', ' ').' %';
+                        @endphp
                         <article class="student-activity-card">
                             <span class="student-activity-icon" aria-hidden="true">{{ $loop->odd ? '📘' : '📗' }}</span>
                             <div class="student-activity-copy">
-                                <span class="student-section-tag">{{ $actividad->tiene_intento_finalizado ? 'Resuelta' : ($actividad->intento_pendiente_id ? 'En progreso' : 'Nueva') }}</span>
+                                <span class="student-section-tag">{{ $finalizados > 0 ? 'Resuelta' : ($actividad->intento_pendiente_id ? 'En progreso' : 'Nueva') }}</span>
                                 <h3><a href="{{ route('student.activities.show', $actividad) }}">{{ $actividad->titulo }}</a></h3>
                                 <p>{{ \Illuminate\Support\Str::limit(strip_tags($actividad->contenido), 110) }}</p>
-                                @if ($actividad->ultimo_porcentaje !== null)
-                                    <p>Último porcentaje: {{ number_format((float) $actividad->ultimo_porcentaje, 2, ',', ' ') }}%</p>
+                                @if ($nivelActual)
+                                    <p>Lectura de nivel {{ $nivelActual->nombre }}</p>
+                                @endif
+                                @if ($finalizados === 0)
+                                    <p>{{ $actividad->intento_pendiente_id ? 'Aún no terminas esta lectura. ¡Puedes continuarla!' : 'Aún no has terminado esta lectura.' }}</p>
+                                @else
+                                    <p>
+                                        Tu primer resultado: {{ $porcentaje($actividad->primer_porcentaje) }}
+                                        @if ($finalizados > 1)
+                                            <br>Tu último resultado: {{ $porcentaje($actividad->ultimo_porcentaje) }}
+                                        @endif
+                                    </p>
+                                    <p>
+                                        <a href="{{ route('student.attempts.result', $actividad->ultimo_intento_id) }}">{{ $finalizados > 1 ? 'Ver mi último resultado' : 'Ver mi resultado' }}</a>
+                                        · <a href="{{ route('student.activities.history') }}">Ver historial</a>
+                                    </p>
                                 @endif
                             </div>
-                            @if ($actividad->tiene_intento_finalizado)
+                            @if ($finalizados > 0)
                                 <a class="student-activity-label" href="{{ route('student.activities.show', $actividad) }}">Repetir actividad →</a>
                             @elseif ($actividad->intento_pendiente_id)
                                 <a class="student-activity-label" href="{{ route('student.attempts.edit', $actividad->intento_pendiente_id) }}">Continuar intento →</a>
