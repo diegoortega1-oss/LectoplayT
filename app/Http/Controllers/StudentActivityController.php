@@ -6,6 +6,7 @@ use App\Models\Actividad;
 use App\Models\ActividadIntento;
 use App\Models\Estudiante;
 use App\Models\Pregunta;
+use App\Services\RegistroAdaptacionNivelService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -76,21 +77,23 @@ class StudentActivityController extends Controller
         return redirect()->route('student.attempts.edit', $intento)->with('status', 'Tus respuestas se guardaron.');
     }
 
-    public function finish(Request $request, ActividadIntento $intento): RedirectResponse
+    public function finish(Request $request, ActividadIntento $intento, RegistroAdaptacionNivelService $registroAdaptacion): RedirectResponse
     {
         $estudiante = $this->student($request);
         $this->ensureOwned($intento, $estudiante);
         $selecciones = $this->validatedSelections($request);
 
-        DB::transaction(function () use ($intento, $estudiante, $selecciones): void {
+        DB::transaction(function () use ($intento, $estudiante, $selecciones, $registroAdaptacion): void {
             // Todas las entregas de un estudiante toman este bloqueo antes del del intento.
             // Así, dos intentos distintos no pueden decidir la recompensa simultáneamente.
-            Estudiante::whereKey($estudiante->getKey())->lockForUpdate()->firstOrFail();
+            // El nivel lector se valida con la fila bloqueada y no con la leída antes de la
+            // transacción, que podría estar desactualizada si otra entrega cambió el nivel.
+            $estudianteBloqueado = Estudiante::whereKey($estudiante->getKey())->lockForUpdate()->firstOrFail();
             $actual = $this->lockedAttempt($intento, $estudiante);
             abort_if($actual->estado !== 'EN_PROCESO', 409, 'Este intento ya fue entregado.');
 
             $actividad = Actividad::findOrFail($actual->actividad_id);
-            $this->ensureAvailable($actividad, $estudiante);
+            $this->ensureAvailable($actividad, $estudianteBloqueado);
             $preguntas = $actividad->preguntas()->get()->keyBy('id_pregunta');
             abort_if($preguntas->isEmpty(), 409, 'Esta actividad aún no tiene preguntas.');
             $this->storeAnswers($actual, $preguntas, $selecciones);
@@ -146,6 +149,10 @@ class StudentActivityController extends Controller
             }
 
             $actual->save();
+
+            // Adaptación del nivel lector en la misma transacción y con el estudiante
+            // bloqueado. Si falla, la excepción revierte también la entrega y los puntos.
+            $registroAdaptacion->aplicar($estudianteBloqueado);
         });
 
         return redirect()->route('student.attempts.result', $intento);
